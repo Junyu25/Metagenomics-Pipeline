@@ -53,7 +53,7 @@ def RunBBMap(InFile, OutFile):
     subprocess.call(cmd, shell=True)
 
 def RunCatRPKM(InFile, OutFile):
-    cmd = "cat " + InFile + " | grep -v '#' | cut -f1, 6 > " + os.path.join(outputDir, OutFile + "_gene_abundance_rpkm.txt")
+    cmd = "cat " + InFile + " | grep -v '#' | cut -f1, 6 > " + os.path.join(outputDir, OutFile + "_gene_abundance.txt")
     subprocess.call(cmd, shell=True)
 
 def RunCatCPM(InFile, OutFile):
@@ -112,6 +112,6 @@ RunBBMapParallel(BBMapInList, BBMapOutList)
 for file in os.listdir(outputDir):
     if file.endswith("_rpkm.txt"):
         InFile = os.path.join(outputDir, file)
-        OutFile = files.replace("_rpkm.txt", "")
+        OutFile = file.replace("_rpkm.txt", "")
         RunCatRPKM(InFile, OutFile)
         RunCatCPM(InFile, OutFile)
