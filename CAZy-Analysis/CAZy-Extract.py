@@ -28,6 +28,8 @@ def ExtractUniInput(file, GeneID):
             strandList.append(desc[3])
     return idList, startList, endList, strandList
 
+#idList plus Prodigal List
+#remove star,end,strand
 def ExtractGeneCatalog(fasta, ID, OutDir):
     AllSeq = SeqIO.to_dict(SeqIO.parse(fasta, "fasta"))
     geneCatalog = []
@@ -39,10 +41,12 @@ def ExtractGeneCatalog(fasta, ID, OutDir):
             #print(strandList[i])
             if strandList[i] == "1":
                 Seq = SeqRecord(seq.seq[int(startList[i]) : int(endList[i])])
-                Seq.id = seq.id
+                #Seq.id = seq.id
+                Seq.id = idList[i]
                 #print(seq.id)
                 #print("1")
-                Seq.description = seq.id + " " + startList[i] + " " + endList[i] + " " + strandList[i]
+                Seq.description = idList[i]
+                #Seq.description = seq.id + " " + startList[i] + " " + endList[i] + " " + strandList[i]
             elif strandList[i] == "-1":
                 Seq = SeqRecord(seq.seq[int(startList[i]) : int(endList[i])].reverse_complement())
                 Seq.id = seq.id

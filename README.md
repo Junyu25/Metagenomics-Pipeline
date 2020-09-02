@@ -1,6 +1,8 @@
 # Metagenomics-Pipeline
 
-## [HUMAnN2 Pipeline](HUMAnN2-Pipeline.ipynb)
+## [HUMAnN2 Pipeline](https://github.com/Junyu25/Metagenomics-Pipeline/blob/master/Humann2-Pipeline.ipynb)
+
+## [Assembly Pipeline]()
 
 ## [Kraken2 Pipeline](Kraken2-Pipeline.ipynb)
 
