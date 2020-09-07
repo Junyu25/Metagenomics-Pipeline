@@ -32,7 +32,7 @@ def RunDiamondParallel(fastaList, db, jobs, threads, outFileList):
     pool.terminate()
 
 def RunDiamond(fasta, db, threads, OutFile):
-    cmd = "diamond blastx --query " + fasta + " --evalue 1.0 --max-target-seqs 1 --outfmt 6 --db " + db + OutFile + " " + str(threads) 
+    cmd = "diamond blastx --query " + fasta + " --evalue 1.0 --max-target-seqs 1 --outfmt 6 --db " + db + " --out " + OutFile + " " + str(threads) 
     subprocess.call(cmd, shell=True)
 
 
