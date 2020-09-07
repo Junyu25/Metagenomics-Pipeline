@@ -32,7 +32,7 @@ def RunDiamondParallel(fastaList, db, jobs, threads, outFileList):
     pool.terminate()
 
 def RunDiamond(fasta, db, threads, OutFile):
-    cmd = "diamond blastx --query " + fasta + " --evalue 1.0 --max-target-seqs 1 --outfmt 6 --db " + db + " --out " + OutFile + " " + str(threads) 
+    cmd = "diamond blastx -q " + fasta  + " -o " + OutFile + " --evalue 1.0 --max-target-seqs 1 --outfmt 6 --db " + db + " -p " + str(threads) 
     subprocess.call(cmd, shell=True)
 
 
@@ -66,7 +66,7 @@ parser.add_argument('-i', '--input', dest='fileDir', type=str, required=True,
                     help="the path of the reads")
 parser.add_argument('-o', '--output', dest='OpDir', type=str, required=True,
                     help="the output path of reads")
-parser.add_argument('-d', '--database', dest='database', type=str,  required=False, default='/home/junyuchen/Lab/Custom-DataBase/CAZy/CAZy',
+parser.add_argument('-d', '--database', dest='database', type=str,  required=False, default='/home/junyuchen/Lab/Custom-DataBase/CAZy/CAZyDB',
                     help="the database path")
 parser.add_argument('-m', '--mapping', dest='mapping', type=str,  required=False, default='/home/junyuchen/Lab/Liuhongbin/CAZyidMapping.csv',
                     help="the ID Mapping file of len and ID of CAZy database path")

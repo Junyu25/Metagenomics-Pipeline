@@ -185,7 +185,7 @@ def m3_humann2_rmtmp(nnodes, script_path,njobs):
     os.system('perl %s/metaphlan_to_stamp.pl metaphlan2_merged.txt > metaphlan2_merged.spf' % (script_path))
 
     #3.8 Remove temp file
-    #os.system('rm -rf humann2_out/*/*temp*/')
+    os.system('rm -rf humann2_out/*/*temp*/')
     #os.system('rm -rf kneaddata_out/')
     
 
