@@ -47,6 +47,7 @@ def calRPKMParallel(BlastTsvFileList, outFileList):
 def calRPKM(BlastTsvFile, OutFile):
     df = pd.read_table(BlastTsvFile, header=None)
     df.columns = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"]
+    idMap = pd.read_csv(idmap, header=None)
     df1 = df.loc[(df["length"] >= 25) & (df["pident"] >= 35)]
     df2 = df1["sseqid"].value_counts()
     idCount = pd.DataFrame()
@@ -67,6 +68,8 @@ parser.add_argument('-o', '--output', dest='OpDir', type=str, required=True,
                     help="the output path of reads")
 parser.add_argument('-d', '--database', dest='database', type=str,  required=False, default='/home/junyuchen/Lab/Custom-DataBase/CAZy/CAZy',
                     help="the database path")
+parser.add_argument('-m', '--mapping', dest='mapping', type=str,  required=False, default='/home/junyuchen/Lab/Liuhongbin/CAZyidMapping.csv',
+                    help="the ID Mapping file of len and ID of CAZy database path")
 parser.add_argument('-j', '--jobs', dest='jobs', type=str,  required=False, default='4',
                     help="the number of jobs run in parallel")
 parser.add_argument('-t', '--threads', dest='threads', type=str, required=False, default='6',
@@ -76,6 +79,7 @@ args = parser.parse_args()
 inputDir = str(args.fileDir)
 ouputDir = os.path.abspath(args.OpDir)
 db = os.path.abspath(args.database)
+idmap = os.path.abspath(args.mapping)
 jobs = int(args.jobs)
 threads = int(args.threads)
 
