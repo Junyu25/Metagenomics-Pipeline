@@ -10,11 +10,11 @@ r2 = ''
 #project = "/home/junyuchen/Lab/Meta-Analysis/DataDownload/data/PRJEB23207"
 for subdir, dirs, files in os.walk(project):
     for fastq in files:
-        if fastq.endswith("1.fq.gz"):
+        if fastq.endswith("1.fastq.gz"):
             #global f1 
             f1 = os.path.join(subdir, fastq)
             print(f1)
-        elif fastq.endswith("2.fq.gz"):
+        elif fastq.endswith("2.fastq.gz"):
             #global r2 
             r2 = os.path.join(subdir, fastq)
             print(r2)

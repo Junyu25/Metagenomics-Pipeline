@@ -49,7 +49,7 @@ def RunSpadesParallel(R1List, R2List, outFileList):
 def RunSpades(R1, R2, OutDir):
     os.makedirs(OutDir, 0o777, True)
     #cmd = "spades.py --isolate -1 " + R1 + " -2 " + R2 + " -o " + OutDir
-    cmd = "spades.py --meta -1 " + R1 + " -2 " + R2 + " -o " + OutDir + " -t 6"
+    cmd = "spades.py --meta -1 " + R1 + " -2 " + R2 + " -o " + OutDir + " -t 16"
     subprocess.call(cmd, shell=True)
 
 
