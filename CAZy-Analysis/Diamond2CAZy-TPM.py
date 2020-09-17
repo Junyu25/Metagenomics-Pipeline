@@ -18,9 +18,11 @@ def RunDiamondDirect(inputDir, ouputDir):
             if file.endswith(".fastq"):
                 fasta = os.path.join(subdir, file)
                 fastaList.append(fasta)
-                outFileList.append(os.path.join(ouputDir, file + "_blastp.tsv"))
-                rpkmList.append(os.path.join(ouputDir, file + "_rpkm.tsv"))
-                calRPKM(os.path.join(ouputDir, file + "_blastp.tsv"), os.path.join(ouputDir, file + "_rpkm.tsv"))
+                OutFile = os.path.join(ouputDir, file + "_blastp.tsv")
+                outFileList.append(OutFile)
+                rpkmList.append(os.path.join(ouputDir, file + "_tpm.tsv"))
+                RunDiamond(fasta, db, threads, OutFile)
+                calRPKM(OutFile, os.path.join(ouputDir, file + "_tpm.tsv"))
     #RunDiamondParallel(fastaList, db, jobs, threads, outFileList)
     #calRPKMParallel(outFileList, rpkmList)
 
