@@ -58,17 +58,17 @@ def m2_run_kneaddata(nnodes, F_list,R_list,script_path, trimmomatic_path, njobs,
     os.system("parallel -j %s --link 'kneaddata -i {1} -i {2} -o kneaddata_out/ \
     -db %s --trimmomatic %s \
     -t %s --trimmomatic-options \"SLIDINGWINDOW:4:20 MINLEN:50\" \
-    --run-bmtagger --remove-intermediate-output' \
+    --bowtie2-options \"--very-sensitive --dovetail\" --remove-intermediate-output' \
      ::: %s ::: %s" % (njobs, refdb_path, trimmomatic_path, nthread, F_list, R_list))
     #Clean up the output directory (helps downstream commands) by moving the discarded sequences to a subfolder:
-    os.system('mkdir kneaddata_out/contam_seq')
+    os.system('mkdir -p kneaddata_out/contam_seq')
     os.system('mv kneaddata_out/*_contam*.fastq kneaddata_out/contam_seq')
     #You can produce a logfile summarizing the kneadData output with this command:
     os.system('kneaddata_read_count_table --input kneaddata_out --output kneaddata_read_counts.txt')
     #2.2 Concatenate unstitched output 
     os.system('perl %s/concat_paired_end.pl -p %s --no_R_match -o cat_reads kneaddata_out/*_paired_*.fastq' % (script_path, nnodes)) 
 
-def m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, refdb_path):
+def m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, njobs, refdb_path):
     """
     :nnodes: the number of nodes to parallel
     :F_list: the string of all the paths of forward fastqc files '/'.
@@ -81,7 +81,7 @@ def m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, refdb_
     os.system("parallel -j %s 'kneaddata -i {1} -o kneaddata_out/ \
     -db %s --trimmomatic %s \
     -t 4 --trimmomatic-options \"SLIDINGWINDOW:4:20 MINLEN:50\" \
-    --run-bmtagger --remove-intermediate-output' \
+    --bowtie2-options \"--very-sensitive --dovetail\" --remove-intermediate-output' \
      ::: %s " % (nnodes, refdb_path, trimmomatic_path, F_list))
     #Clean up the output directory (helps downstream commands) by moving the discarded sequences to a subfolder:
     os.system('mkdir kneaddata_out/contam_seq')
@@ -185,7 +185,7 @@ def m3_humann2_rmtmp(nnodes, script_path,njobs):
     os.system('perl %s/metaphlan_to_stamp.pl metaphlan2_merged.txt > metaphlan2_merged.spf' % (script_path))
 
     #3.8 Remove temp file
-    #os.system('rm -rf humann2_out/*/*temp*/')
+    os.system('rm -rf humann2_out/*/*temp*/')
     #os.system('rm -rf kneaddata_out/')
     
 
@@ -281,17 +281,12 @@ if __name__ == '__main__':
     if pair_end == 'True':
         m2_run_kneaddata(nnodes, F_list,R_list,script_path, trimmomatic_path, njobs, refdb_path)
     else:
-        m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, refdb_path)
+        m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, njobs, refdb_path)
     
-    #3. Determine Functions with HUMAnN2
+"""    #3. Determine Functions with HUMAnN2
     if pair_end == 'True':
         m3_humann2(nnodes, script_path,njobs)
     else:
         m3_humann2_rmtmp(nnodes, script_path,njobs)
-    
-
-
-
-
-
+    """
 

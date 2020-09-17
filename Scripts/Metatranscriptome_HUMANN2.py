@@ -3,95 +3,6 @@ from __future__ import print_function
 import math
 import glob,os,re,argparse
 
-"""
-#   Copyright {2019} Yuxiang Tan
-#
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
-#This script will run HUMANN2 automatically，mostly following the microbiome_helper workflow
-#The output folder will be the current working folder (it is pointed by the workfd in qsub)
-#Usage rule: python /home/yxtan/HUMANN2_SOP_scripts/Metagenomics_HUMANN2.py -i sample_table.txt -n 4'
-#For single-end data, the sample table must have 3 columns as same as the pair-end data, but the third column will not be used and could be filled by any strings.
-
-#This script starts from raw fqs before joined. No required rules for sample names, but information of each sample must be list in the tabular sample table.
-#Library file requirement:
-#HUMANN2 must be installed by anaconda, depending databases should be installed following the homepage instruction.
-#kneaddata must be installed by anaconda
-
-
-"""
-
-def m1_fastqc(ALL_list,nnodes):
-    """
-    :ALL_list: the string of all the paths of fastqc files '/'.
-    :return: None
-    """     
-    if not os.path.isdir('fastqc_out'):
-        print('Input folder is not exist; mkdir now.')
-        os.system('mkdir fastqc_out')
-        os.system('fastqc -t %s %s -o fastqc_out/' % (nnodes, ALL_list))
-    else:
-        print('fastqc step is skipped.')
-
-def m2_run_kneaddata(nnodes, F_list,R_list,script_path, trimmomatic_path, njobs, refdb_path):
-    """
-    :nnodes: the number of nodes to parallel
-    :F_list: the string of all the paths of forward fastqc files '/'.
-    :R_list: the string of all the paths of paired reverse fastqc files '/'.
-    :script_path: the path of custome script, default is /home/yxtan/HUMANN2_SOP_scripts/
-    :return: None
-    """
-    #2.1 Running KneadData
-    #Use kneaddata to run pre-processing tools. First Trimmomatic is run to remove low quality sequences. Then Bowtie2 is run to screen out contaminant sequences. Below we are screening out reads that map to the human or PhiX genomes. Note KneadData is being run below on all unstitched FASTQ pairs with parallel, you can see our quick tutorial on this tool here. For a detailed breakdown of the options in the below command see this page. The forward and reverse reads will be specified by "_1" and "_2" in the output files, ignore the "R1" in each filename. Note that the \ characters at the end of each line are just to split the command over multiple lines to make it easier to read.
-    #the order of quotes are extremely important here.
-    nthread=str(int(math.ceil(float(int(nnodes))/int(njobs))))
-    os.system("parallel -j %s --link 'kneaddata -i {1} -i {2} -o kneaddata_out/ \
-    -db %s --trimmomatic %s \
-    -t %s --trimmomatic-options \"SLIDINGWINDOW:4:20 MINLEN:50\" \
-    --run-bmtagger --remove-intermediate-output' \
-     ::: %s ::: %s" % (njobs, refdb_path, trimmomatic_path, nthread, F_list, R_list))
-    #Clean up the output directory (helps downstream commands) by moving the discarded sequences to a subfolder:
-    os.system('mkdir kneaddata_out/contam_seq')
-    os.system('mv kneaddata_out/*_contam*.fastq kneaddata_out/contam_seq')
-    #You can produce a logfile summarizing the kneadData output with this command:
-    os.system('kneaddata_read_count_table --input kneaddata_out --output kneaddata_read_counts.txt')
-    #2.2 Concatenate unstitched output 
-    os.system('perl %s/concat_paired_end.pl -p %s --no_R_match -o cat_reads kneaddata_out/*_paired_*.fastq' % (script_path, nnodes)) 
-
-def m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, refdb_path):
-    """
-    :nnodes: the number of nodes to parallel
-    :F_list: the string of all the paths of forward fastqc files '/'.
-    :script_path: the path of custome script, default is /home/yxtan/HUMANN2_SOP_scripts/
-    :return: None
-    """
-    #2.1 Running KneadData
-    #Use kneaddata to run pre-processing tools. First Trimmomatic is run to remove low quality sequences. Then Bowtie2 is run to screen out contaminant sequences. Below we are screening out reads that map to the human or PhiX genomes. Note KneadData is being run below on all unstitched FASTQ pairs with parallel, you can see our quick tutorial on this tool here. For a detailed breakdown of the options in the below command see this page. The forward and reverse reads will be specified by "_1" and "_2" in the output files, ignore the "R1" in each filename. Note that the \ characters at the end of each line are just to split the command over multiple lines to make it easier to read.
-    #the order of quotes are extremely important here.
-    os.system("parallel -j %s 'kneaddata -i {1} -o kneaddata_out/ \
-    -db %s --trimmomatic %s \
-    -t 4 --trimmomatic-options \"SLIDINGWINDOW:4:20 MINLEN:50\" \
-    --run-bmtagger --remove-intermediate-output' \
-     ::: %s " % (nnodes, refdb_path, trimmomatic_path, F_list))
-    #Clean up the output directory (helps downstream commands) by moving the discarded sequences to a subfolder:
-    os.system('mkdir kneaddata_out/contam_seq')
-    os.system('mv kneaddata_out/*_contam*.fastq kneaddata_out/contam_seq')
-    #You can produce a logfile summarizing the kneadData output with this command:
-    os.system('kneaddata_read_count_table --input kneaddata_out --output kneaddata_read_counts.txt')
-    #2.2 Concatenate unstitched output 
-    os.system('mkdir cat_reads/')
-    os.system('mv kneaddata_out/*kneaddata.fastq cat_reads/') 
-
 
 #dowanlaod databases following http://huttenhower.sph.harvard.edu/humann2, humann2 will update the database path to $DIR
 # DIR="/home/yxtan/HUMANN2_SOP_scripts/dateabases/"
@@ -235,63 +146,23 @@ if __name__ == '__main__':
         print('The folder of trimmomatic files is not exist; Exit now.')
         exit(0)
     
-    #1. First Steps
-    #1.1 Generate the list of samples
-    #rd_dir = "example_data_file.txt"
-    ID_list = []
-    Counter=0
-    File = open(rd_dir)
-    for line in File:
-        if line[0] == '#':
-            continue
-        line = line.strip()
-        Fields = line.split("\t")
-        print(Fields[0])
-        if Counter==0:
-            ID_list.append(Fields[0])
-            F_list =Fields[1]
-            R_list =Fields[2]
-            ALL_list ='%s %s' % (Fields[1], Fields[2])
-            Counter+=1
-        else:
-            if len(Fields) == 3:
-                ID_list.append(Fields[0])
-                F_list ='%s %s' % (F_list, Fields[1])
-                R_list ='%s %s' % (R_list, Fields[2])
-                ALL_list ='%s %s %s' % (ALL_list, Fields[1], Fields[2])
-            elif len(Fields) == 1:
-                if Fields[0] == '':
-                    print("warning: there is an empty row, if more than 1 warning like this, please check the sample table")
-                else:
-                    print('The input sample table has less columns than it should be; Exit now.')
-                    exit(0)
-            else:
-                print('The input sample table has more columns than it should be; Exit now.')
-                exit(0)
-    
-    File.close()
-    
+
     #1.2 Inspect read quality
-    if pair_end == 'True':
-        m1_fastqc(ALL_list,nnodes)
-    else:
-        m1_fastqc(F_list,nnodes)
+    #if pair_end == 'True':
+     #   m1_fastqc(ALL_list,nnodes)
+    #else:
+     #   m1_fastqc(F_list,nnodes)
     
     #2. Read Quality-Control and Contaminant Screens and connect to a long read
-    if pair_end == 'True':
-        m2_run_kneaddata(nnodes, F_list,R_list,script_path, trimmomatic_path, njobs, refdb_path)
-    else:
-        m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, refdb_path)
+    #if pair_end == 'True':
+     #   m2_run_kneaddata(nnodes, F_list,R_list,script_path, trimmomatic_path, njobs, refdb_path)
+    #else:
+     #   m2_run_kneaddata_single(nnodes, F_list,script_path, trimmomatic_path, njobs, refdb_path)
     
     #3. Determine Functions with HUMAnN2
     if pair_end == 'True':
-        m3_humann2(nnodes, script_path,njobs)
+        m3_humann2(nnodes, script_path, njobs)
     else:
         m3_humann2_rmtmp(nnodes, script_path,njobs)
     
-
-
-
-
-
 
