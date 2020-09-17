@@ -19,10 +19,10 @@ def RunDiamondDirect(inputDir, ouputDir):
                 fasta = os.path.join(subdir, file)
                 fastaList.append(fasta)
                 outFileList.append(os.path.join(ouputDir, file + "_blastp.tsv"))
-                rpkmList.append(os.path.join(ouputDir, file + "_rpkm.csv"))
-                #calRPKM(os.path.join(ouputDir, file + "_blastp.tsv"), os.path.join(ouputDir, file + "_rpkm.csv"))
-    RunDiamondParallel(fastaList, db, jobs, threads, outFileList)
-    calRPKMParallel(outFileList, rpkmList)
+                rpkmList.append(os.path.join(ouputDir, file + "_rpkm.tsv"))
+                calRPKM(os.path.join(ouputDir, file + "_blastp.tsv"), os.path.join(ouputDir, file + "_rpkm.tsv"))
+    #RunDiamondParallel(fastaList, db, jobs, threads, outFileList)
+    #calRPKMParallel(outFileList, rpkmList)
 
 
 def RunDiamondParallel(fastaList, db, jobs, threads, outFileList):
@@ -47,6 +47,7 @@ def calRPKMParallel(BlastTsvFileList, outFileList):
 
 def calRPKM(BlastTsvFile, OutFile):
     df = pd.read_table(BlastTsvFile, header=None)
+    fileName = os.path.split(BlastTsvFile)[1].replace(".fastq_blastp.tsv", "")
     df.columns = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"]
     idMap = pd.read_csv(idmap)
     df1 = df.loc[(df["length"] >= 25) & (df["pident"] >= 35)]
@@ -56,9 +57,12 @@ def calRPKM(BlastTsvFile, OutFile):
     df4 = pd.DataFrame(df2.tolist())
     idCount["Count"] = df4[0]
     result = pd.merge(idCount, idMap, on='ID')
-    rpkm = result["Count"]/((result["Len"]/1000) * (sum(result["Count"]))/1000000)
-    result["rpkm"] = rpkm
-    result.to_csv(OutFile)
+    rpk = result["Count"]/((result["Len"]/1000))
+    cpm = rpk * (1/sum(rpk)) * 1000000
+    out = pd.DataFrame()
+    out["# Gene Family"] = result["ID"]
+    out[fileName] = cpm
+    out.to_csv(OutFile, index=None, sep="\t")
 
 
 
