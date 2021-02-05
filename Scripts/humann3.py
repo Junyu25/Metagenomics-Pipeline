@@ -10,7 +10,7 @@ from multiprocessing import Pool, freeze_support
 
 ## Generate manifest Table
 def manifestGen(InDir, OutDir):
-    sampleID = []
+    SampleID = []
     df = pd.DataFrame()
     for subdir, dirs, files in os.walk(InDir):
         for file in files:
@@ -19,8 +19,8 @@ def manifestGen(InDir, OutDir):
                 R1 = os.path.join(subdir, file)
                 R2 = os.path.join(subdir, file.replace(r1_end, r2_end))
                 if os.path.exists(R2) and os.path.getsize(filePath) > 0:
-                    sampleID = file.replace(r1_end, "")
-                    df = df.append({"sampleID": sampleID, "R1":R1, "R2":R2},ignore_index=True)
+                    SampleID = file.replace(r1_end, "")
+                    df = df.append({"SampleID": SampleID, "R1":R1, "R2":R2},ignore_index=True)
     return df # return pair end dataframe
 
 ## Kneadata pair end tirmming
@@ -135,7 +135,7 @@ if os.path.exists(OutDir) == 0:
 kneadataDir = os.path.join(OutDir, "kneadata_out")
 if os.path.exists(kneadataDir) == 0:
     os.makedirs(kneadataDir, 0o777, True)
-cat_reads_dir = os.path.join(kneadataDir, "cat_reads")
+cat_reads_dir = os.path.join(OutDir, "cat_reads")
 if os.path.exists(cat_reads_dir) == 0:
     os.makedirs(cat_reads_dir, 0o777, True)
 humann3Dir = os.path.join(OutDir, "humann3_out")
@@ -146,12 +146,12 @@ if os.path.exists(metaphlan3Dir) == 0:
     os.makedirs(metaphlan3Dir, 0o777, True)
 ## process manifest
 df = manifestGen(InDir, OutDir)
-df.to_csv(os.path.join(OutDir, "SampleTable.csv"))
+df.to_csv(os.path.join(OutDir, "SampleTable.csv"), index = None)
 prefixList = df["SampleID"].tolist()
 R1List = df["R1"].tolist()
 R2List = df["R2"].tolist()
 
-RunKneadataParallel(R1List, R2List, Kneaddata_db, trimmomaticPath, prefixList, OutDir, threads, jobs)
+RunKneadataParallel(R1List, R2List, Kneaddata_db, trimmomaticPath, prefixList, kneadataDir, threads, jobs)
 sumKneaddata(kneadataDir, OutDir)
 CatReads(kneadataDir, OutDir, threads)
 fastqList, prefixList = parseCatReads(cat_reads_dir)

@@ -20,9 +20,9 @@ def RunDiamondDirect(inputDir, ouputDir):
                 fastaList.append(fasta)
                 OutFile = os.path.join(ouputDir, file + "_blastp.tsv")
                 outFileList.append(OutFile)
-                rpkmList.append(os.path.join(ouputDir, file + "_tpm.tsv"))
-                RunDiamond(fasta, db, threads, OutFile)
-                calRPKM(OutFile, os.path.join(ouputDir, file + "_tpm.tsv"))
+                #rpkmList.append(os.path.join(ouputDir, file + "_tpm.tsv"))
+                #RunDiamond(fasta, db, threads, OutFile)
+                calRPKM(OutFile, os.path.join(ouputDir, file + "_rpk.tsv"), os.path.join(ouputDir, file + "_tpm.tsv"))
     #RunDiamondParallel(fastaList, db, jobs, threads, outFileList)
     #calRPKMParallel(outFileList, rpkmList)
 
@@ -47,7 +47,7 @@ def calRPKMParallel(BlastTsvFileList, outFileList):
     pool.join()
     pool.terminate()
 
-def calRPKM(BlastTsvFile, OutFile):
+def calRPKM(BlastTsvFile, rpk_out, OutFile):
     df = pd.read_table(BlastTsvFile, header=None)
     fileName = os.path.split(BlastTsvFile)[1].replace(".fastq_blastp.tsv", "")
     df.columns = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"]
@@ -62,8 +62,14 @@ def calRPKM(BlastTsvFile, OutFile):
     rpk = result["Count"]/((result["Len"]/1000))
     cpm = rpk * (1/sum(rpk)) * 1000000
     out = pd.DataFrame()
+    out_rpk = pd.DataFrame()
     out["# Gene Family"] = result["ID"]
     out[fileName] = cpm
+    #out rpk
+    out_rpk["# Gene Family"] = result["ID"]
+    out_rpk[fileName] = rpk
+    
+    out_rpk.to_csv(rpk_out, index=None, sep="\t")
     out.to_csv(OutFile, index=None, sep="\t")
 
 
@@ -73,7 +79,7 @@ parser.add_argument('-i', '--input', dest='fileDir', type=str, required=True,
                     help="the path of the reads")
 parser.add_argument('-o', '--output', dest='OpDir', type=str, required=True,
                     help="the output path of reads")
-parser.add_argument('-d', '--database', dest='database', type=str,  required=False, default='/home/junyuchen/Lab/Custom-DataBase/CAZy/CAZyDB',
+parser.add_argument('-d', '--database', dest='database', type=str,  required=False, default='/home/junyuchen/Lab/Custom-DataBase/CAZy/CAZyDB_0.9.25',
                     help="the database path")
 parser.add_argument('-m', '--mapping', dest='mapping', type=str,  required=False, default='/home/junyuchen/Lab/Liuhongbin/CAZyidMapping.csv',
                     help="the ID Mapping file of len and ID of CAZy database path")

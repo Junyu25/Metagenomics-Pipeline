@@ -21,13 +21,14 @@ humann_config --update database_folders utility_mapping /home/hongbinliu/humann_
 humann_config --update database_folders protein /home/hongbinliu/humann_dbs/uniref
 humann_config --update database_folders nucleotide /home/hongbinliu/humann_dbs/chocophlan
 
-python /home/junyuchen/Lab/Metagenomics-Pipeline/Scripts/humann3.py \ 
-    -i /home/junyuchen/Lab/Metagenomics-Pipeline/data \ #input Dir
-    -o /home/junyuchen/Lab/Metagenomics-Pipeline/result \ #output Dir
-    -t 36 \ #number of threads you want to run per job/sample
-    -j 6 \ #number of jobs/sample you want to run in parallel
+python /home/junyuchen/Lab/Metagenomics-Pipeline/Scripts/humann3.py \
+    -i /home/junyuchen/Lab/Metagenomics-Pipeline/data \
+    -o /home/junyuchen/Lab/Metagenomics-Pipeline/result \
+    -t 36 \
+    -j 6 \
     > log.txt #logfile
-
+# -t  number of threads you want to run per job/sample
+# -j  number of jobs/sample you want to run in parallel
 endtime=$(date +"%s")
 diff=$(($endtime - $starttime))
 echo Elapsed time is $(($diff/60)) minutes and $(($diff%60)) seconds.
