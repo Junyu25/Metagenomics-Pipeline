@@ -1,5 +1,21 @@
+'''
+Copyright {2020} Junyu Chen
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'''
+
 import os
-import shutil 
+#import shutil 
 import argparse
 import subprocess
 import pandas as pd
@@ -27,19 +43,19 @@ def manifestGen(InDir, OutDir):
 '''
 kneaddata -i R1 -i R2 -o OutDir -db dbPath --output-prefix prefix --threads 16 --remove-intermediate-output --run-fastqc-start --run-fastqc-end --cat-final-output
 '''
-def RunKneadata(R1, R2, db, trimmomaticPath, prefix, OutDir, threads):
+def RunKneaddata(R1, R2, db, trimmomaticPath, prefix, OutDir, threads):
     cmd = "kneaddata -i " + R1 + " -i " + R2 + " --reference-db " + db + " -o " + OutDir + " --output-prefix " + prefix + \
         " --thread " + str(threads) + " --trimmomatic " + trimmomaticPath + \
         " --remove-intermediate-output --run-fastqc-start --run-fastqc-end --cat-final-output"
     subprocess.call(cmd, shell=True)
-## Run RunKneadata in parallel
-def RunKneadataParallel(R1List, R2List, db, trimmomaticPath, prefixList, OutDir, threads, jobs):
+## Run Kneaddata in parallel
+def RunKneaddataParallel(R1List, R2List, db, trimmomaticPath, prefixList, OutDir, threads, jobs):
     pool = Pool(processes = jobs)
-    pool.starmap(RunKneadata, zip(R1List, R2List, repeat(db), repeat(trimmomaticPath), prefixList, repeat(OutDir), repeat(threads)))
+    pool.starmap(RunKneaddata, zip(R1List, R2List, repeat(db), repeat(trimmomaticPath), prefixList, repeat(OutDir), repeat(threads)))
     pool.close()
     pool.join()
     pool.terminate()
-
+## Get summary table of Kneadata result
 def sumKneaddata(kneadataDir, OutDir):
     #Clean up the output directory (helps downstream commands) by moving the discarded sequences to a subfolder:
     contam_seq_dir = os.path.join(kneadataDir, "contam_seq")
@@ -50,8 +66,7 @@ def sumKneaddata(kneadataDir, OutDir):
     #You can produce a logfile summarizing the kneadData output with this command:
     cmd = "kneaddata_read_count_table --input " +  kneadataDir + " --output " + os.path.join(OutDir, "kneaddata_read_counts.txt")
     subprocess.call(cmd, shell=True)
-
-#os.system('perl %s/concat_paired_end.pl -p %s --no_R_match -o cat_reads kneaddata_out/*_paired_*.fastq' % (script_path, nnodes)) 
+## Cat kneadata result
 def CatReads(kneadataDir, OutDir, threads):
     cmd = "perl " + scriptPath+"/concat_paired_end.pl -p " + threads + " --no_R_match -o " + cat_reads_dir + " " + kneadataDir + "/*_paired_*.fastq"
     subprocess.call(cmd, shell=True)
@@ -65,21 +80,22 @@ def parseCatReads(InDir):
             fastqList.append(filePath)
     return fastqList, prefixList
 
-# set database dir or add it to parameter
+## Run humann3
 def RunHumann3(fastq, prefix, OutDir, threads):
     cmd = "humann --input " + fastq + " --output " + os.path.join(OutDir, prefix) + " --threads " + str(threads)
+## Run humann3 in parallel
 def RunHumann3Parallel(fastqList, prefixList, OutDir, threads, jobs):
     pool = Pool(processes = jobs)
     pool.starmap(RunHumann3, zip(fastqList, prefixList, repeat(OutDir), repeat(threads)))
     pool.close()
     pool.join()
     pool.terminate()
-#humann3_final_out
+## Get summary of humann3 result
 def SumHumann3(humann3Dir, OutDir):
     humann3_final_out_dir = os.path.join(OutDir, "humann3_final_out")
     if os.path.exists(humann3_final_out_dir) == 0:
         os.makedirs(humann3_final_out_dir, 0o777, True)
-    # Merge individual sample data together
+    #Merge individual sample data together
     subprocess.call("humann_join_tables -s --input " + humann3Dir + " --file_name pathabundance --output " + os.path.join(humann3_final_out_dir, "humann3_pathabundance.tsv"), shell=True)
     subprocess.call("humann_join_tables -s --input " + humann3Dir + " --file_name pathcoverage --output " + os.path.join(humann3_final_out_dir, "humann3_pathcoverage.tsv"), shell=True)
     subprocess.call("humann_join_tables -s --input " + humann3Dir + " --file_name genefamilies --output " + os.path.join(humann3_final_out_dir, "humann3_genefamilies.tsv"), shell=True)
@@ -91,12 +107,13 @@ def SumHumann3(humann3Dir, OutDir):
     subprocess.call("humann_split_stratified_table --input " + os.path.join(humann3_final_out_dir, "humann3_pathabundance_cpm.tsv") + " --output " + humann3_final_out_dir, shell=True)
     subprocess.call("humann_split_stratified_table --input " + os.path.join(humann3_final_out_dir, "humann3_pathcoverage_cpm.tsv") + " --output " + humann3_final_out_dir, shell=True)
     subprocess.call("humann_split_stratified_table --input " + os.path.join(humann3_final_out_dir, "humann3_genefamilies_cpm.tsv") + " --output " + humann3_final_out_dir, shell=True)
-
+## Get summary of metaphlan result
 def SumMetaphlan3(metaphlan3Dir, humann3Dir, OutDir):
     subprocess.call("cp " + humann3Dir + "/*/*/*metaphlan_bugs_list.tsv" + metaphlan3Dir, shell=True)
     subprocess.call("merge_metaphlan_tables.py " + metaphlan3Dir + "/*metaphlan_bugs_list.tsv > " + os.path.join(OutDir, "metaphlan3_merged.txt"), shell=True)
     subprocess.call("sed -i 's/_metaphlan_bugs_list//g' " + os.path.join(OutDir, "metaphlan3_merged.txt"), shell=True)
 
+## Argument Parser
 parser = argparse.ArgumentParser(description="Kneaddata pre clean reads for Humann3")
 parser.add_argument('-i', '--input', dest='InDir', type=str, required=True,
                     help="the path of the reads")
@@ -118,7 +135,7 @@ parser.add_argument('-R', '--sepR', dest='r2_end', type=str, required=False, def
                     help="It is the surfix to recognize the reverse info, default='_2.clean.fq.gz'.")
 args = parser.parse_args()
 
-
+## Argument
 InDir = os.path.abspath(args.InDir)
 OutDir = os.path.abspath(args.OutDir)
 scriptPath = os.path.abspath(args.scriptPath)
@@ -129,7 +146,7 @@ threads = int(args.threads)
 r1_end = str(args.r1_end)
 r2_end = str(args.r2_end)
 
-## init out dir
+## init output dir
 if os.path.exists(OutDir) == 0:
     os.makedirs(OutDir, 0o777, True)
 kneadataDir = os.path.join(OutDir, "kneadata_out")
@@ -146,12 +163,13 @@ if os.path.exists(metaphlan3Dir) == 0:
     os.makedirs(metaphlan3Dir, 0o777, True)
 ## process manifest
 df = manifestGen(InDir, OutDir)
-df.to_csv(os.path.join(OutDir, "SampleTable.csv"), index = None)
 prefixList = df["SampleID"].tolist()
 R1List = df["R1"].tolist()
 R2List = df["R2"].tolist()
+df.to_csv(os.path.join(OutDir, "SampleTable.csv"), index = None)
 
-RunKneadataParallel(R1List, R2List, Kneaddata_db, trimmomaticPath, prefixList, kneadataDir, threads, jobs)
+## processing...
+RunKneaddataParallel(R1List, R2List, Kneaddata_db, trimmomaticPath, prefixList, kneadataDir, threads, jobs)
 sumKneaddata(kneadataDir, OutDir)
 CatReads(kneadataDir, OutDir, threads)
 fastqList, prefixList = parseCatReads(cat_reads_dir)
