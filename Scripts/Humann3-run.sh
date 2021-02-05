@@ -14,19 +14,19 @@ echo Starting Time is `date`
 echo Directory is `pwd`
 starttime=$(date +"%s")
 
+#actiavte env
 source /home/junyuchen/Biosoft/anaconda3/bin/activate /home/junyuchen/Biosoft/anaconda3/envs/humann3
-
-
+#set database
 humann_config --update database_folders utility_mapping /home/hongbinliu/humann_dbs/utility_mapping
 humann_config --update database_folders protein /home/hongbinliu/humann_dbs/uniref
 humann_config --update database_folders nucleotide /home/hongbinliu/humann_dbs/chocophlan
 
-python /home/junyuchen/Lab/Meta-Analysis/Scripts/Metagenomics_HUMANN2_bmttager.py \
-    -i /home/junyuchen/Lab/Liuhongbin/PathTable.tsv \ #
-    -n 36 \ 
-    -j 6 \ 
-    -t /home/junyuchen/Biosoft/anaconda3/envs/humann2/share/trimmomatic-0.39-1 \ 
-    -d /home/junyuchen/Databases/KneadData/Homo_sapiens_BMTagger_v0.1 > log.txt
+python /home/junyuchen/Lab/Metagenomics-Pipeline/Scripts/humann3.py \ 
+    -i /home/junyuchen/Lab/Metagenomics-Pipeline/data \ #input Dir
+    -o /home/junyuchen/Lab/Metagenomics-Pipeline/result \ #output Dir
+    -t 36 \ #number of threads you want to run per job/sample
+    -j 6 \ #number of jobs/sample you want to run in parallel
+    > log.txt #logfile
 
 endtime=$(date +"%s")
 diff=$(($endtime - $starttime))
