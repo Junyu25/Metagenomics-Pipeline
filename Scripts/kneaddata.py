@@ -46,7 +46,7 @@ kneaddata -i R1 -i R2 -o OutDir -db dbPath --output-prefix prefix --threads 16 -
 def RunKneaddata(R1, R2, db, trimmomaticPath, prefix, OutDir, threads):
     cmd = "kneaddata -i " + R1 + " -i " + R2 + " --reference-db " + db + " -o " + OutDir + " --output-prefix " + prefix + \
         " --thread " + str(threads) + " --trimmomatic " + trimmomaticPath + \
-        " --remove-intermediate-output --run-fastqc-start --run-fastqc-end --cat-final-output"
+        " --remove-intermediate-output --run-fastqc-start --run-fastqc-end"
     subprocess.call(cmd, shell=True)
 ## Run Kneaddata in parallel
 def RunKneaddataParallel(R1List, R2List, db, trimmomaticPath, prefixList, OutDir, threads, jobs):
