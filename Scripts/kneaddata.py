@@ -101,13 +101,18 @@ threads = int(args.threads)
 r1_end = str(args.r1_end)
 r2_end = str(args.r2_end)
 
+## init output dir
+if os.path.exists(OutDir) == 0:
+    os.makedirs(OutDir, 0o777, True)
+kneadataDir = os.path.join(OutDir, "kneadata_out")
+if os.path.exists(kneadataDir) == 0:
+    os.makedirs(kneadataDir, 0o777, True)
 ## process manifest
 df = manifestGen(InDir, OutDir)
 prefixList = df["SampleID"].tolist()
 R1List = df["R1"].tolist()
 R2List = df["R2"].tolist()
 df.to_csv(os.path.join(OutDir, "SampleTable.csv"), index = None)
-
 
 ## processing...
 RunKneaddataParallel(R1List, R2List, Kneaddata_db, trimmomaticPath, prefixList, kneadataDir, threads, jobs)
