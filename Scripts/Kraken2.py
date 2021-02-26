@@ -76,8 +76,8 @@ parser.add_argument('-t', '--threads', dest='threads', type=str, required=False,
                     help="the number of threads run for a job")
 parser.add_argument('-F', '--sepF', dest='r1_end', type=str, required=False, default='_paired_1.fastq',
                     help="It is the surfix to recognize the kneaddata forward info, default='_paired_1.fastq'.")
-parser.add_argument('-R', '--sepR', dest='r2_end', type=str, required=False, default='_paired_2.fastqz',
-                    help="It is the surfix to recognize the kneaddata reverse info, default='_paired_2.fastqz'.")
+parser.add_argument('-R', '--sepR', dest='r2_end', type=str, required=False, default='_paired_2.fastq',
+                    help="It is the surfix to recognize the kneaddata reverse info, default='_paired_2.fastq'.")
 args = parser.parse_args()
 
 ## Argument
